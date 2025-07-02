@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "nicosdungoen",
+	"version": "${version}",
+	"name": "NicosDungoen",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/nicosdungoen/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.me.nicosdungeon.NicosDungoen"
+		],
+		"fabric-datagen": [
+			"net.me.nicosdungeon.NicosDungoenDataGenerator"
+		],
+		"client": [
+			"net.me.nicosdungeon.NicosDungeonClient"
+		]
+	},
+	"mixins": [
+		"nicosdungoen.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

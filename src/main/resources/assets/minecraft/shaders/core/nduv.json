@@ -1,0 +1,10 @@
+{
+  "vertex": "vnduv",
+  "fragment": "fnduv",
+  "attributes": [
+    "Position",
+    "Color"
+  ],
+  "uniforms": [],
+  "samplers": []
+}
