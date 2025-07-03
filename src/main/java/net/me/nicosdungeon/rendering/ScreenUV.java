@@ -11,7 +11,11 @@ import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL20;
+import org.joml.Matrix4f;
+import java.nio.FloatBuffer;
+import org.lwjgl.system.MemoryStack;
+
 
 import java.awt.*;
 import java.nio.FloatBuffer;
@@ -42,10 +46,11 @@ public class ScreenUV {
     }
 
     private static void add_point_to_buffer(WorldRenderContext ctx, BufferBuilder buffer, Vector3f point, Color color) {
-        // NicosDungoen.LOGGER.info("[VERTEX BUFFER]:     Vertex: " + point);
         Vec3d cameraPos = ctx.camera().getPos();
-        point = new Vector3f((float) (point.x - cameraPos.x), (float) (point.y - cameraPos.y), (float) (point.z - cameraPos.z));
-        buffer.vertex(point.x, point.y, point.z).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+
+        Vector3f point_mcam = new Vector3f((float) (point.x - cameraPos.x), (float) (point.y - cameraPos.y), (float) (point.z - cameraPos.z));
+
+        buffer.vertex(point_mcam.x, point_mcam.y, point_mcam.z).color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
     }
 
     private static void render(WorldRenderContext ctx) {
@@ -53,6 +58,11 @@ public class ScreenUV {
 
             // setting shader
             RenderSystem.setShader(() -> CUSTOM_SHADER);
+
+            // === Upload matrices with raw OpenGL ===
+            uploadMatrixUniform(CUSTOM_SHADER.getUniform("ProjMat"), ctx.projectionMatrix());
+            uploadMatrixUniform(CUSTOM_SHADER.getUniform("ModelViewMat"), ctx.matrixStack().peek().getPositionMatrix());
+
 
         } else {
             RenderSystem.setShader(GameRenderer::getPositionColorProgram);
@@ -79,5 +89,15 @@ public class ScreenUV {
         BufferRenderer.drawWithGlobalProgram(buffer.end());
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
+    }
+
+    private static void uploadMatrixUniform(GlUniform uniform, Matrix4f matrix) {
+        if (uniform == null) return;
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer fb = stack.mallocFloat(16);
+            matrix.get(fb); // JOML fills the buffer in column-major order (correct for OpenGL)
+            GL20.glUniformMatrix4fv(uniform.getLocation(), false, fb);
+        }
     }
 }

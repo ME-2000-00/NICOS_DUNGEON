@@ -1,10 +1,10 @@
 #version 150
 
-in mat4 ProjMat;
-in mat4 ModelViewMat;
-
 in vec3 Position;
 in vec4 Color;
+
+uniform mat4 ProjMat;
+uniform mat4 ModelViewMat;
 
 out vec4 vertColor;
 

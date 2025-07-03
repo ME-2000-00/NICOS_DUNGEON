@@ -5,6 +5,17 @@
     "Position",
     "Color"
   ],
-  "uniforms": [],
+  "uniforms": [
+    {
+      "name": "ModelViewMat",
+      "type": "matrix4x4",
+      "count": 1
+    },
+    {
+      "name": "ProjMat",
+      "type": "matrix4x4",
+      "count": 1
+    }
+  ],
   "samplers": []
 }
