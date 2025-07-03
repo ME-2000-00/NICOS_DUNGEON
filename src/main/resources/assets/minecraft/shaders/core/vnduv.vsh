@@ -1,14 +1,14 @@
 #version 150
 
-in vec3 Position;
-in vec4 Color;
-
 uniform mat4 ProjMat;
 uniform mat4 ModelViewMat;
 
-out vec4 vertColor;
+in vec4 Position;
+in vec4 Color;
+
+out vec4 vertexColor;
 
 void main() {
-    vertColor = Color;
-    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+    gl_Position = ProjMat * ModelViewMat * vec4(Position,1.0);
+    vertexColor = Color;
 }

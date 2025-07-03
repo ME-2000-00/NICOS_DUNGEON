@@ -7,6 +7,7 @@ import net.me.nicosdungeon.NicosDungoen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.gl.Uniform;
 import net.minecraft.client.render.*;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
@@ -22,23 +23,25 @@ import java.nio.FloatBuffer;
 
 public class ScreenUV {
     private static ShaderProgram CUSTOM_SHADER;
+    private static Color test_color = Color.GREEN;
 
     public static void init() {
-        WorldRenderEvents.LAST.register((context) -> {
+        WorldRenderEvents.START.register((context) -> {
+                    // setup custom shader
+                    if (CUSTOM_SHADER == null) {
+                        try {
+                            CUSTOM_SHADER = new ShaderProgram(
+                                    MinecraftClient.getInstance().getResourceManager(),
+                                    "nduv",
+                                    VertexFormats.POSITION_COLOR
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+        });
 
-            if (CUSTOM_SHADER == null) {
-                try {
-                    CUSTOM_SHADER = new ShaderProgram(
-                            MinecraftClient.getInstance().getResourceManager(),
-                            "nduv",
-                            VertexFormats.POSITION_COLOR
-                    );
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-
+        WorldRenderEvents.END.register((context) -> {
             if (NicosDungoen.Global_render) {
                 render(context);
             }
@@ -59,15 +62,27 @@ public class ScreenUV {
             // setting shader
             RenderSystem.setShader(() -> CUSTOM_SHADER);
 
-            // === Upload matrices with raw OpenGL ===
-            uploadMatrixUniform(CUSTOM_SHADER.getUniform("ProjMat"), ctx.projectionMatrix());
-            uploadMatrixUniform(CUSTOM_SHADER.getUniform("ModelViewMat"), ctx.matrixStack().peek().getPositionMatrix());
-
-
         } else {
             RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+            test_color = Color.RED;
         }
 
+
+        // passing uniforms
+        Uniform PMUniform = CUSTOM_SHADER.getUniform("ProjMat");
+        if (PMUniform != null) {
+            PMUniform.set(ctx.projectionMatrix()); // If `matrix` is Matrix4f
+            NicosDungoen.LOGGER.info(ctx.projectionMatrix().toString());
+        }
+
+        Uniform MVMUniform = CUSTOM_SHADER.getUniform("ModelViewMat");
+        if (MVMUniform != null) {
+            MVMUniform.set(ctx.matrixStack().peek().getPositionMatrix()); // If `matrix` is Matrix4f
+            NicosDungoen.LOGGER.info(ctx.matrixStack().peek().getPositionMatrix().toString());
+        }
+
+
+        // basic quad setup
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         RenderSystem.enableCull();
         RenderSystem.enableDepthTest();
@@ -81,23 +96,13 @@ public class ScreenUV {
         Vector3f offset3 = new Vector3f(1.0f, 1.0f, 0.0f);
         Vector3f offset4 = new Vector3f(0.0f, 1.0f, 0.0f);
 
-        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset1), Color.RED);
-        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset2), Color.BLUE);
-        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset3), Color.GREEN);
-        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset4), Color.YELLOW);
+        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset1), test_color);
+        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset2), test_color);
+        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset3), test_color);
+        add_point_to_buffer(ctx, buffer, new Vector3f(NicosDungoen.Triangle_position).add(offset4), test_color);
 
-        BufferRenderer.drawWithGlobalProgram(buffer.end());
+        BufferRenderer.draw(buffer.end());
         RenderSystem.disableCull();
         RenderSystem.disableDepthTest();
-    }
-
-    private static void uploadMatrixUniform(GlUniform uniform, Matrix4f matrix) {
-        if (uniform == null) return;
-
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer fb = stack.mallocFloat(16);
-            matrix.get(fb); // JOML fills the buffer in column-major order (correct for OpenGL)
-            GL20.glUniformMatrix4fv(uniform.getLocation(), false, fb);
-        }
     }
 }
