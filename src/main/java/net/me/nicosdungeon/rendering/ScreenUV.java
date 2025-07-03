@@ -23,6 +23,7 @@ import java.nio.FloatBuffer;
 
 public class ScreenUV {
     private static ShaderProgram CUSTOM_SHADER;
+    // for debugging
     private static Color test_color = Color.GREEN;
 
     public static void init() {

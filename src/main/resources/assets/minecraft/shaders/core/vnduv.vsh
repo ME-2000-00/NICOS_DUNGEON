@@ -3,7 +3,7 @@
 uniform mat4 ProjMat;
 uniform mat4 ModelViewMat;
 
-in vec4 Position;
+in vec3 Position;
 in vec4 Color;
 
 out vec4 vertexColor;
